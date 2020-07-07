@@ -4,6 +4,7 @@ import librosa
 import librosa.display
 import matplotlib.pyplot as plt
 import sklearn
+import sys 
 import os
 
 
@@ -16,8 +17,6 @@ class Frame:
 		#MFCC  feature extraction automatically performs framing . Th default value for the noOfMFCC = 20
 		 
 		mfcc = librosa.feature.mfcc(wav, sr = 44100)
-
-		print(mfcc.shape)
 
 		# Feature scaling , so that the feature with higher magnitude does not become main deciding feature
 		mfcc = sklearn.preprocessing.scale(mfcc, axis=1)
@@ -37,10 +36,17 @@ class Frame:
 		
 		#Saving the image
 		fig.savefig(title + '.png')
-		print('Image Created')
+
+	#Function to delete the .mp4 files from the directory
+	def delete_mp4(self):
+		dir = os.getcwd()
+		for file in os.listdir(dir):
+			if file.endswith('.mp4'):
+				os.remove(os.path.join(dir, file))
+
 
 	#Function to parse the csv files and create list of those youtube items with the required Label.
-	def list_of_cry(self, csv_file):
+	def list_of_cry(self, csv_file, label):
 
 		l1 = []
 	
@@ -50,15 +56,11 @@ class Frame:
 				s = elem['positive_labels']
 				x = s.split(',')
 				for st in x:
-					if st == '/t/dd00001':
+					if st == label:
 						l1.append(elem)
-		
-		for var in l1:
-			print(var)
-		print(len(l1))
 		return l1
 
-	def download_yt(self, list_of_csv, dire, count_of_images):
+	def download_yt(self, list_of_csv, count_of_images):
 
 		i = 1 
 		dick = {}
@@ -79,7 +81,7 @@ class Frame:
 					stream = yt.streams.filter(only_audio=True).all()
 					stream = stream[0]
 					print(yt.title)
-					print(stream.download(dire, filename=str(i)))
+					stream.download(filename=str(i))
 					flag = True
 				except Exception as e:
 					print(e)
@@ -94,31 +96,14 @@ class Frame:
 			flag = False
 
 def main():
+	
+	label = sys.argv[1]
+	limit_for_images = int(sys.argv[2])
 	f = Frame()
-	#test.csv file is the csv file downloaded from Audioset which contains the annotated list of youtube videos for over 500 classes.
-	cry = f.list_of_cry('test.csv')
-	#Directory of the download
-	dire = '/home/blackbrd/Desktop/Pratyush/Projects/youtube-dl-master'
-	count_of_images = 6
-	f.download_yt(cry, dire, count_of_images)
+	cry = f.list_of_cry('test.csv', label)
+	f.download_yt(cry, limit_for_images)
+	f.delete_mp4()
 	
 
 if __name__ == '__main__':
 	main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
